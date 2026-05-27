@@ -3,13 +3,25 @@ import { useNavigate } from 'react-router-dom';
 
 function Profil() {
   const navigate = useNavigate();
-  // State untuk mengatur tampilan (menu utama, data pribadi, keamanan, atau notifikasi)
-  const [view, setView] = useState('main'); 
+  const [view, setView] = useState('main');
+
+  // Ambil data user dari localStorage (hasil register)
+  const savedUser = JSON.parse(localStorage.getItem('userData') || '{}');
+  const user = {
+    nama: savedUser.nama || 'Pengguna',
+    nik: savedUser.nik || '-',
+    email: savedUser.email || '-',
+  };
+
+  // Masking NIK: tampilkan 4 digit awal & 4 digit akhir, sisanya bintang
+  const maskedNik = user.nik !== '-'
+    ? user.nik.replace(/(\d{4})\d{8}(\d{4})/, '$1********$2')
+    : '-';
 
   // Komponen Reusable untuk Toggle Switch
   const Toggle = ({ active }) => (
-    <div style={{...styles.toggleBg, backgroundColor: active ? '#1A56DB' : '#CBD5E0'}}>
-      <div style={{...styles.toggleCircle, transform: active ? 'translateX(18px)' : 'translateX(0)'}}></div>
+    <div style={{ ...styles.toggleBg, backgroundColor: active ? '#1A56DB' : '#CBD5E0' }}>
+      <div style={{ ...styles.toggleCircle, transform: active ? 'translateX(18px)' : 'translateX(0)' }}></div>
     </div>
   );
 
@@ -24,7 +36,7 @@ function Profil() {
       <div style={styles.scrollBody}>
         <div style={styles.idCardBlue}>
           <div style={styles.idBadge}>VERIFIED DIGITAL ID</div>
-          <h2 style={styles.idName}>Amrullah</h2>
+          <h2 style={styles.idName}>{user.nama}</h2>
           <p style={styles.idNumber}>ID: SL-2024-0892</p>
           <div style={styles.checkIcon}>🛡️</div>
         </div>
@@ -34,19 +46,19 @@ function Profil() {
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.inputLabel}>NAMA LENGKAP</label>
-          <div style={styles.inputBox}>Amrullah</div>
+          <div style={styles.inputBox}>{user.nama}</div>
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.inputLabel}>NOMOR INDUK KEPENDUDUKAN (NIK)</label>
-          <div style={styles.inputBox}>3273000000000892</div>
+          <div style={styles.inputBox}>{user.nik}</div>
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.inputLabel}>ALAMAT EMAIL</label>
-          <div style={styles.inputBox}>📧 amrullah@ledger.gov</div>
+          <div style={styles.inputBox}>📧 {user.email}</div>
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.inputLabel}>NOMOR TELEPON</label>
-          <div style={styles.inputBox}>📞 +62 812-3456-7890</div>
+          <div style={styles.inputBox}>📞 -</div>
         </div>
       </div>
     </div>
@@ -81,7 +93,7 @@ function Profil() {
           <div style={styles.gridItem}>
             <span style={styles.gridIcon}>👤</span>
             <h5 style={styles.gridTitle}>Biometrics</h5>
-            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
               <span style={styles.gridStatusText}>ENABLED</span>
               <Toggle active={true} />
             </div>
@@ -89,7 +101,7 @@ function Profil() {
           <div style={styles.gridItem}>
             <span style={styles.gridIcon}>🔑</span>
             <h5 style={styles.gridTitle}>MFA Auth</h5>
-            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
               <span style={styles.gridStatusText}>ACTIVE</span>
               <Toggle active={true} />
             </div>
@@ -115,7 +127,7 @@ function Profil() {
         <h5 style={styles.groupTitle}>Delivery Channels</h5>
         <div style={styles.notifItem}>
           <div style={styles.notifIconBox}>🔔</div>
-          <div style={{flex:1, marginLeft:'12px'}}>
+          <div style={{ flex: 1, marginLeft: '12px' }}>
             <h4 style={styles.notifMainText}>Push Notifications</h4>
             <p style={styles.notifSubText}>Instant alerts on your device</p>
           </div>
@@ -123,7 +135,7 @@ function Profil() {
         </div>
         <div style={styles.notifItem}>
           <div style={styles.notifIconBox}>📧</div>
-          <div style={{flex:1, marginLeft:'12px'}}>
+          <div style={{ flex: 1, marginLeft: '12px' }}>
             <h4 style={styles.notifMainText}>Email Summaries</h4>
             <p style={styles.notifSubText}>Weekly critical updates</p>
           </div>
@@ -139,18 +151,19 @@ function Profil() {
           <Toggle active={true} />
         </div>
         <div style={styles.notifListItem}>
-          <span style={{...styles.listItemText, color:'#E53E3E'}}>✨ Critical Resolution Alerts</span>
+          <span style={{ ...styles.listItemText, color: '#E53E3E' }}>✨ Critical Resolution Alerts</span>
           <Toggle active={true} />
         </div>
       </div>
     </div>
   );
 
-  // ================= TAMPILAN UTAMA PROFIL =================
+  // ================= ROUTING TAMPILAN =================
   if (view === 'pribadi') return <DataPribadiView />;
   if (view === 'security') return <SecurityView />;
   if (view === 'notif') return <NotificationView />;
 
+  // ================= TAMPILAN UTAMA PROFIL =================
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -161,8 +174,8 @@ function Profil() {
       <div style={styles.scrollBody}>
         <div style={styles.mainIdSection}>
           <div style={styles.avatarLarge}>🧑‍💻</div>
-          <h3 style={styles.userName}>Amrullah</h3>
-          <p style={styles.userNik}>NIK: 3519********0892</p>
+          <h3 style={styles.userName}>{user.nama}</h3>
+          <p style={styles.userNik}>NIK: {maskedNik}</p>
         </div>
         <div style={styles.menuGrid}>
           <div onClick={() => setView('pribadi')} style={styles.menuFullItem}>
@@ -177,7 +190,7 @@ function Profil() {
             <span>🔔 Pengaturan Notifikasi</span>
             <span>›</span>
           </div>
-          <div onClick={() => navigate('/')} style={{...styles.menuFullItem, color:'#E53E3E'}}>
+          <div onClick={() => { localStorage.removeItem('userData'); navigate('/'); }} style={{ ...styles.menuFullItem, color: '#E53E3E' }}>
             <span>🚪 Keluar Aplikasi</span>
             <span>›</span>
           </div>
@@ -201,11 +214,11 @@ const styles = {
   idName: { margin: 0, fontSize: '24px', fontWeight: '800' },
   idNumber: { margin: '5px 0 0 0', fontSize: '12px', opacity: 0.7 },
   checkIcon: { position: 'absolute', top: '24px', right: '24px', fontSize: '24px' },
-  
+
   sectionHeaderRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', marginTop: '10px' },
   sectionTitleBlack: { fontSize: '13px', fontWeight: '800', color: '#1E293B', letterSpacing: '0.5px' },
   btnUpdate: { fontSize: '10px', color: '#1A56DB', fontWeight: 'bold', cursor: 'pointer' },
-  
+
   inputGroup: { marginBottom: '15px' },
   inputLabel: { fontSize: '9px', fontWeight: 'bold', color: '#94A3B8', marginBottom: '6px', display: 'block' },
   inputBox: { background: '#FFF', border: '1px solid #E2E8F0', padding: '12px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', color: '#1E293B' },

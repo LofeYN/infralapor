@@ -11,8 +11,16 @@ function Register() {
       alert('Mohon isi semua kolom data pendaftaran!');
       return;
     }
+
+    // Simpan data user ke localStorage agar bisa dibaca di halaman Profil
+    localStorage.setItem('userData', JSON.stringify({
+      nama: formData.nama,
+      nik: formData.nik,
+      email: formData.email,
+    }));
+
     alert(`Pendaftaran Sukses!\nAkun atas nama ${formData.nama} berhasil diamankan ke Sovereign Ledger.`);
-    navigate('/login'); // Setelah sukses, oper ke halaman login biar bisa masuk
+    navigate('/login');
   };
 
   return (
@@ -27,9 +35,9 @@ function Register() {
         <form onSubmit={handleRegisterSubmit} style={styles.form}>
           <div style={styles.inputGroup}>
             <label style={styles.label}>NAMA LENGKAP</label>
-            <input 
-              type="text" 
-              placeholder="Masukkan nama sesuai KTP" 
+            <input
+              type="text"
+              placeholder="Masukkan nama sesuai KTP"
               style={styles.input}
               value={formData.nama}
               onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
@@ -38,9 +46,9 @@ function Register() {
 
           <div style={styles.inputGroup}>
             <label style={styles.label}>NOMOR INDUK KEPENDUDUKAN (NIK)</label>
-            <input 
-              type="number" 
-              placeholder="16 Digit NIK Resmi" 
+            <input
+              type="number"
+              placeholder="16 Digit NIK Resmi"
               style={styles.input}
               value={formData.nik}
               onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
@@ -49,9 +57,9 @@ function Register() {
 
           <div style={styles.inputGroup}>
             <label style={styles.label}>ALAMAT EMAIL</label>
-            <input 
-              type="email" 
-              placeholder="contoh@domain.com" 
+            <input
+              type="email"
+              placeholder="contoh@domain.com"
               style={styles.input}
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -60,9 +68,9 @@ function Register() {
 
           <div style={styles.inputGroup}>
             <label style={styles.label}>KATA SANDI / PASSWORD</label>
-            <input 
-              type="password" 
-              placeholder="••••••••" 
+            <input
+              type="password"
+              placeholder="••••••••"
               style={styles.input}
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -87,7 +95,7 @@ function Register() {
 }
 
 const styles = {
-  container: { width: '100%', height: '100%', background: '#0A1628', display: 'flex', flexDirection: 'column', justifycontent: 'center', justifyContent: 'center', padding: '24px' },
+  container: { width: '100%', height: '100%', background: '#0A1628', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '24px' },
   content: { display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' },
   logoBadge: { fontSize: '32px', background: 'rgba(255,255,255,0.1)', padding: '10px', borderRadius: '16px', marginBottom: '12px' },
   title: { color: '#FFF', fontSize: '20px', fontWeight: 'bold', margin: 0 },
