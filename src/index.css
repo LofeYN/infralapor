@@ -13,11 +13,21 @@ body {
   justify-content: center; 
   align-items: center;     
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overflow: hidden;         
+  overflow: hidden;        
 }
 
 #root {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+
+.hilangkan-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hilangkan-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
 }

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+// IMPORT LOGO SESUAI NAMA FILE
+import logoImg from '../assets/logo_dashboard.png'; 
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -9,6 +11,7 @@ function Dashboard() {
   const user = {
     nama: savedUser.nama || 'LOFE',
     inisial: savedUser.nama ? savedUser.nama.charAt(0).toUpperCase() : 'L',
+    avatar: savedUser.avatar || null, 
   };
 
   // Kumpulan data default awal yang bervariasi agar dashboard terlihat realistis dan penuh di awal
@@ -45,12 +48,10 @@ function Dashboard() {
       if (laporanLokal) {
         const parsed = JSON.parse(laporanLokal);
         if (parsed.length > 0) {
-          // Menggabungkan data inputan baru dari kamera dengan data default agar counter statistik akurat
           setLaporanList(parsed);
           return;
         }
       }
-      // Jika local storage kosong, isi dengan data default awal
       setLaporanList(defaultLaporan);
       localStorage.setItem('inframerge_reports', JSON.stringify(defaultLaporan));
     };
@@ -60,12 +61,11 @@ function Dashboard() {
     return () => window.removeEventListener('focus', ambilLaporan);
   }, []);
 
-  // 1. KALKULASI STATISTIK SECARA OTOMATIS DAN RIIL
+  // KALKULASI STATISTIK SECARA OTOMATIS DAN RIIL
   const totalLaporan = laporanList.length;
   const jumlahDiproses = laporanList.filter(item => item.status === 'CRITICAL' || item.status === 'HEAVY' || item.status === 'MODERATE').length;
   const jumlahSelesai = laporanList.filter(item => item.status === 'SELESAI').length;
 
-  // Format angka menjadi 2 digit (contoh: 4 -> 04)
   const formatAngka = (num) => num.toString().padStart(2, '0');
 
   const getGreeting = () => {
@@ -76,18 +76,13 @@ function Dashboard() {
     return 'Selamat Malam';
   };
 
-  // 2. DINAMIS BADGE STYLE BERDASARKAN STATUS LAPORAN
   const getBadgeStyle = (status) => {
     switch (status) {
-      case 'CRITICAL':
-        return { bg: '#FED7D7', txt: '#E53E3E' };
+      case 'CRITICAL': return { bg: '#FED7D7', txt: '#E53E3E' };
       case 'HEAVY':
-      case 'MODERATE':
-        return { bg: '#FEEBC8', txt: '#DD6B20' };
-      case 'SELESAI':
-        return { bg: '#C6F6D5', txt: '#38A169' };
-      default:
-        return { bg: '#E2E8F0', txt: '#475569' };
+      case 'MODERATE': return { bg: '#FEEBC8', txt: '#DD6B20' };
+      case 'SELESAI': return { bg: '#C6F6D5', txt: '#38A169' };
+      default: return { bg: '#E2E8F0', txt: '#475569' };
     }
   };
 
@@ -96,23 +91,26 @@ function Dashboard() {
       {/* APP BAR */}
       <div style={styles.appBar}>
         <div style={styles.appBarLeft}>
-          <span style={styles.bankIcon}>🏛️</span>
+          {/* LOGO DENGAN PERBAIKAN UKURAN & MARGIN NEGATIF */}
+          <img src={logoImg} alt="Infralapor Logo" style={styles.logoImage} />
           <span style={styles.appBrandText}>Infralapor</span>
         </div>
         <div onClick={() => navigate('/profil')} style={styles.profileAvatar}>
-          {user.inisial}
+          {user.avatar ? (
+            <img src={user.avatar} alt="Profil" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            user.inisial
+          )}
         </div>
       </div>
 
       {/* BODY */}
-      <div style={styles.scrollBody}>
-        {/* GREETING */}
+      <div className="hilangkan-scrollbar" style={styles.scrollBody}>
         <div style={styles.greetingSection}>
           <span style={styles.subSubtitle}>SOVEREIGN LEDGER ACCESS</span>
           <h2 style={styles.mainGreeting}>{getGreeting()},<br />{user.nama}.</h2>
         </div>
 
-        {/* BANNER */}
         <div onClick={() => navigate('/kamera-ai')} style={styles.actionBanner}>
           <div style={styles.cameraIconBadge}>📸</div>
           <div style={styles.bannerTextContent}>
@@ -121,7 +119,6 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* STATISTIK - SEKARANG OTOMATIS BERUBAH */}
         <div style={styles.statsGrid}>
           <div style={styles.statCard}>
             <span style={styles.statNumber}>{formatAngka(totalLaporan)}</span>
@@ -137,7 +134,6 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* LAPORAN TERBARU - DESAIN PREMIUM BARU */}
         <h3 style={styles.sectionMainTitle}>Laporan Terbaru</h3>
         {laporanList.length > 0 ? (
           <div style={styles.laporanScroll}>
@@ -203,10 +199,21 @@ function Dashboard() {
 const styles = {
   container: { width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', background: '#F8FAFC', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', position: 'relative', overflow: 'hidden' },
   appBar: { background: '#0B4596', padding: '40px 16px 14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 },
-  appBarLeft: { display: 'flex', alignItems: 'center', gap: '8px' },
-  bankIcon: { fontSize: '16px', color: '#FFFFFF' },
+  appBarLeft: { display: 'flex', alignItems: 'center', gap: '0px' }, // Diubah ke 0px agar teks tidak berjarak jauh akibat ruang transparan gambar
+  
+  // Modifikasi khusus untuk mengatasi padding bawaan logo gambar yang terlalu lebar
+  logoImage: { 
+    width: '110px', 
+    height: '55px', 
+    objectFit: 'contain', 
+    marginLeft: '-40px',   // Memotong ruang kosong transparan sebelah kiri
+    marginRight: '-40px',  // Memotong ruang kosong transparan sebelah kanan
+    marginTop: '-5px',
+    marginBottom: '-5px'
+  },
+  
   appBrandText: { color: '#FFFFFF', fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px' },
-  profileAvatar: { width: '34px', height: '34px', borderRadius: '50%', background: '#FFFFFF', color: '#0B4596', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', border: '2px solid rgba(255,255,255,0.3)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
+  profileAvatar: { width: '34px', height: '34px', borderRadius: '50%', background: '#FFFFFF', color: '#0B4596', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', border: '2px solid rgba(255,255,255,0.3)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', overflow: 'hidden' },
   scrollBody: { flex: 1, padding: '24px 16px 90px 16px', display: 'flex', flexDirection: 'column', overflowY: 'auto', WebkitOverflowScrolling: 'touch', minHeight: 0 },
   greetingSection: { marginBottom: '16px' },
   subSubtitle: { fontSize: '9px', fontWeight: '800', color: '#94A3B8', letterSpacing: '0.8px' },
@@ -221,8 +228,6 @@ const styles = {
   statNumber: { fontSize: '22px', fontWeight: '800', color: '#0B4596' },
   statLabel: { fontSize: '8.5px', fontWeight: 'bold', color: '#64748B', textAlign: 'center', marginTop: '4px', lineHeight: '1.2', letterSpacing: '0.2px' },
   sectionMainTitle: { fontSize: '16px', fontWeight: '900', color: '#0B4596', margin: '0 0 14px 0', letterSpacing: '0.3px' },
-  
-  /* PERBAIKAN STRUKTUR LIST & CARD (ANTI-JELEK) */
   laporanScroll: { display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '10px' },
   card: { background: '#FFFFFF', borderRadius: '14px', border: '1px solid #E2E8F0', overflow: 'hidden', display: 'flex', height: '105px', boxShadow: '0 2px 8px rgba(148, 163, 184, 0.08)', transition: 'transform 0.2s ease' },
   cardImageFrame: { width: '105px', flexShrink: 0, position: 'relative', background: '#EDF2F7' },
@@ -238,7 +243,6 @@ const styles = {
   progressText: { fontSize: '9px', fontWeight: '800', fontFamily: 'monospace', minWidth: '45px', textAlign: 'right' },
   bottomRow: { display: 'flex', alignItems: 'center', marginTop: '2px' },
   lokasiText: { fontSize: '10.5px', color: '#64748B', margin: 0, fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 },
-  
   emptyState: { textAlign: 'center', padding: '30px 20px', color: '#94A3B8', fontSize: '12px', fontWeight: '600', background: '#FFF', borderRadius: '14px', border: '1px dashed #CBD5E1' },
   bottomTabBar: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '65px', background: '#FFFFFF', borderTop: '1px solid #EDF2F7', display: 'flex', justifyContent: 'space-around', alignItems: 'center', paddingBottom: '12px', zIndex: 1000 },
   tabItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#94A3B8', cursor: 'pointer', flex: 1 },

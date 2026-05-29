@@ -101,6 +101,22 @@ function KameraAI() {
     setShowPreview(true);
   };
 
+  // FUNGSI BARU: Mengambil gambar dari galeri perangkat
+  const handleGalleryUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCapturedImage(reader.result);
+        // Karena ini dari galeri dan bukan live feed, kita pakai skor AI simulasi/acak
+        const skorHasilAnalisis = parseFloat((55 + Math.random() * 35).toFixed(1));
+        setSeverityScore(skorHasilAnalisis);
+        setShowPreview(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const getStatusKategori = (score) => {
     if (score >= 75) return { teks: 'CRITICAL', warna: '#E53E3E' };
     if (score >= 60) return { teks: 'HEAVY', warna: '#DD6B20' };
@@ -215,9 +231,24 @@ function KameraAI() {
             </div>
           </div>
 
+          {/* BAGIAN TOMBOL SHUTTER & GALERI */}
           <div style={styles.shutterRow}>
             <p style={styles.hintText}>Ketuk tombol putih untuk memindai kerusakan jalan</p>
-            <button onClick={handleCaptureAI} style={styles.whiteShutterBtn}></button>
+            <div style={styles.shutterContainer}>
+              <button onClick={handleCaptureAI} style={styles.whiteShutterBtn}></button>
+              
+              <button onClick={() => document.getElementById('galeriInputLaporan').click()} style={styles.galleryBtn} title="Pilih dari Galeri">
+                🖼️
+              </button>
+              {/* Input File Tersembunyi */}
+              <input 
+                type="file" 
+                id="galeriInputLaporan" 
+                accept="image/*" 
+                style={{ display: 'none' }} 
+                onChange={handleGalleryUpload} 
+              />
+            </div>
           </div>
         </div>
       ) : (
@@ -225,7 +256,7 @@ function KameraAI() {
           <div style={styles.previewHeader}><h4>HASIL ANALISIS CITRA AI</h4></div>
           
           <div style={styles.previewImageArea}>
-            {useSimulatedMock || !capturedImage ? (
+            {useSimulatedMock && !capturedImage ? (
               <div style={styles.roadTextureBg}>
                 <div style={styles.potholeReal}>
                   <div style={styles.maskSegformerOverlay}></div>
@@ -290,9 +321,14 @@ const styles = {
   indicatorCard: { background: 'rgba(26, 32, 44, 0.85)', padding: '4px 6px', borderRadius: '4px', width: '80px', display: 'flex', flexDirection: 'column' },
   indTitle: { fontSize: '5px', color: '#A0AEC0', fontWeight: 'bold' },
   indStatus: { fontSize: '7.5px', color: '#FFF', marginTop: '1px' },
-  shutterRow: { zIndex: 10, width: '100%', paddingBottom: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' },
+  
+  // Style baru untuk mensejajarkan tombol shutter dan galeri
+  shutterRow: { zIndex: 10, width: '100%', paddingBottom: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' },
+  shutterContainer: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', position: 'relative' },
   hintText: { color: '#FFF', fontSize: '8px', textShadow: '1px 1px 2px #000', margin: 0 },
-  whiteShutterBtn: { width: '48px', height: '48px', background: '#FFF', border: '4px solid #CBD5E0', borderRadius: '50%', cursor: 'pointer' },
+  whiteShutterBtn: { width: '48px', height: '48px', background: '#FFF', border: '4px solid #CBD5E0', borderRadius: '50%', cursor: 'pointer', zIndex: 2 },
+  galleryBtn: { position: 'absolute', right: '30px', background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '50%', width: '36px', height: '36px', fontSize: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', zIndex: 2, backdropFilter: 'blur(4px)' },
+  
   previewScreen: { height: '100vh', display: 'flex', flexDirection: 'column', background: '#F7FAFC' },
   previewHeader: { background: '#0A1628', color: '#fff', padding: '35px 12px 12px 12px', textAlign: 'center', fontSize: '11px' },
   previewImageArea: { flex: 1, margin: '12px', borderRadius: '12px', position: 'relative', overflow: 'hidden' },

@@ -5,22 +5,64 @@ function Profil() {
   const navigate = useNavigate();
   const [view, setView] = useState('main');
 
-  // Ambil data user dari localStorage (hasil register)
+  // ── 1. STATE UNTUK DATA PRIBADI & AVATAR ───────────────────────────────────
   const savedUser = JSON.parse(localStorage.getItem('userData') || '{}');
-  const user = {
+  const [editData, setEditData] = useState({
     nama: savedUser.nama || 'Pengguna',
     nik: savedUser.nik || '-',
     email: savedUser.email || '-',
-  };
+    telepon: savedUser.telepon || '-',
+    avatar: savedUser.avatar || null, // Menyimpan string Base64 foto
+  });
 
-  // Masking NIK: tampilkan 4 digit awal & 4 digit akhir, sisanya bintang
-  const maskedNik = user.nik !== '-'
-    ? user.nik.replace(/(\d{4})\d{8}(\d{4})/, '$1********$2')
+  // ── 2. STATE UNTUK SECURITY & NOTIFIKASI (TOGGLE) ───────────────────────────
+  const [bioActive, setBioActive] = useState(true);
+  const [mfaActive, setMfaActive] = useState(true);
+  
+  const [pushActive, setPushActive] = useState(true);
+  const [emailActive, setEmailActive] = useState(false);
+  
+  const [notifReport, setNotifReport] = useState(true);
+  const [notifReview, setNotifReview] = useState(true);
+  const [notifCritical, setNotifCritical] = useState(true);
+
+  // Masking NIK: tampilkan 4 digit awal & 4 digit akhir
+  const maskedNik = editData.nik !== '-' && editData.nik.length >= 8
+    ? editData.nik.replace(/^(\d{4}).*(\d{4})$/, '$1********$2')
     : '-';
 
+  // ── 3. FUNGSI UBAH & SIMPAN FOTO PROFIL (BASE64) ───────────────────────────
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validasi ukuran file (opsional, misal maks 2MB agar localStorage tidak penuh)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Ukuran file terlalu besar! Maksimal 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        const updatedData = { ...editData, avatar: base64String };
+        
+        // Update state dan langsung simpan ke localStorage
+        setEditData(updatedData);
+        localStorage.setItem('userData', JSON.stringify(updatedData));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // ── 4. FUNGSI SIMPAN DATA PRIBADI Teks ─────────────────────────────────────
+  const handleSimpanData = () => {
+    localStorage.setItem('userData', JSON.stringify(editData));
+    alert('✅ Data pribadi berhasil diperbarui!');
+  };
+
   // Komponen Reusable untuk Toggle Switch
-  const Toggle = ({ active }) => (
-    <div style={{ ...styles.toggleBg, backgroundColor: active ? '#1A56DB' : '#CBD5E0' }}>
+  const Toggle = ({ active, onClick }) => (
+    <div onClick={onClick} style={{ ...styles.toggleBg, backgroundColor: active ? '#1A56DB' : '#CBD5E0' }}>
       <div style={{ ...styles.toggleCircle, transform: active ? 'translateX(18px)' : 'translateX(0)' }}></div>
     </div>
   );
@@ -33,32 +75,58 @@ function Profil() {
         <span style={styles.headerBrand}>Infralapor</span>
         <div style={{ width: '20px' }}></div>
       </div>
-      <div style={styles.scrollBody}>
+      <div className="hilangkan-scrollbar" style={styles.scrollBody}>
         <div style={styles.idCardBlue}>
           <div style={styles.idBadge}>VERIFIED DIGITAL ID</div>
-          <h2 style={styles.idName}>{user.nama}</h2>
+          <h2 style={styles.idName}>{editData.nama}</h2>
           <p style={styles.idNumber}>ID: SL-2024-0892</p>
           <div style={styles.checkIcon}>🛡️</div>
         </div>
+        
         <div style={styles.sectionHeaderRow}>
           <h3 style={styles.sectionTitleBlack}>DATA PRIBADI</h3>
-          <span style={styles.btnUpdate}>🔄 PERBARUI</span>
+          <span onClick={handleSimpanData} style={styles.btnUpdate}>💾 SIMPAN PERUBAHAN</span>
         </div>
+
         <div style={styles.inputGroup}>
           <label style={styles.inputLabel}>NAMA LENGKAP</label>
-          <div style={styles.inputBox}>{user.nama}</div>
+          <input 
+            style={styles.inputBox} 
+            value={editData.nama} 
+            onChange={(e) => setEditData({ ...editData, nama: e.target.value })}
+          />
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.inputLabel}>NOMOR INDUK KEPENDUDUKAN (NIK)</label>
-          <div style={styles.inputBox}>{user.nik}</div>
+          <input 
+            type="number"
+            style={styles.inputBox} 
+            value={editData.nik} 
+            onChange={(e) => {
+              if (e.target.value.length <= 16) {
+                setEditData({ ...editData, nik: e.target.value });
+              }
+            }}
+          />
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.inputLabel}>ALAMAT EMAIL</label>
-          <div style={styles.inputBox}>📧 {user.email}</div>
+          <input 
+            type="email"
+            style={styles.inputBox} 
+            value={editData.email} 
+            onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+          />
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.inputLabel}>NOMOR TELEPON</label>
-          <div style={styles.inputBox}>📞 -</div>
+          <input 
+            type="tel"
+            placeholder="Mulai dengan 08..."
+            style={styles.inputBox} 
+            value={editData.telepon} 
+            onChange={(e) => setEditData({ ...editData, telepon: e.target.value })}
+          />
         </div>
       </div>
     </div>
@@ -72,7 +140,7 @@ function Profil() {
         <span style={styles.headerBrand}>Infralapor</span>
         <div style={{ width: '20px' }}></div>
       </div>
-      <div style={styles.scrollBody}>
+      <div className="hilangkan-scrollbar" style={styles.scrollBody}>
         <div style={styles.securityBanner}>
           <h2 style={styles.bannerTitleLarge}>Security Protocol</h2>
           <div style={styles.statusRow}>
@@ -87,23 +155,28 @@ function Profil() {
           </div>
           <h4 style={styles.cardMainTitle}>Passkey Ledger</h4>
           <p style={styles.cardSubTitle}>Rotate your administrative access keys regularly to maintain integrity.</p>
-          <button style={styles.btnChangePassword}>Change Password</button>
+          <button 
+            onClick={() => alert('Fitur ubah kata sandi akan segera hadir!')} 
+            style={styles.btnChangePassword}
+          >
+            Change Password
+          </button>
         </div>
         <div style={styles.gridSecurity}>
           <div style={styles.gridItem}>
             <span style={styles.gridIcon}>👤</span>
             <h5 style={styles.gridTitle}>Biometrics</h5>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <span style={styles.gridStatusText}>ENABLED</span>
-              <Toggle active={true} />
+              <span style={styles.gridStatusText}>{bioActive ? 'ENABLED' : 'DISABLED'}</span>
+              <Toggle active={bioActive} onClick={() => setBioActive(!bioActive)} />
             </div>
           </div>
           <div style={styles.gridItem}>
             <span style={styles.gridIcon}>🔑</span>
             <h5 style={styles.gridTitle}>MFA Auth</h5>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <span style={styles.gridStatusText}>ACTIVE</span>
-              <Toggle active={true} />
+              <span style={styles.gridStatusText}>{mfaActive ? 'ACTIVE' : 'INACTIVE'}</span>
+              <Toggle active={mfaActive} onClick={() => setMfaActive(!mfaActive)} />
             </div>
           </div>
         </div>
@@ -119,7 +192,7 @@ function Profil() {
         <span style={styles.headerBrand}>Infralapor</span>
         <div style={{ width: '20px' }}></div>
       </div>
-      <div style={styles.scrollBody}>
+      <div className="hilangkan-scrollbar" style={styles.scrollBody}>
         <div style={styles.securityBanner}>
           <h2 style={styles.bannerTitleLarge}>Notification Settings</h2>
           <p style={styles.bannerSubText}>Manage how you receive alerts and updates regarding citizen reports.</p>
@@ -131,7 +204,7 @@ function Profil() {
             <h4 style={styles.notifMainText}>Push Notifications</h4>
             <p style={styles.notifSubText}>Instant alerts on your device</p>
           </div>
-          <Toggle active={true} />
+          <Toggle active={pushActive} onClick={() => setPushActive(!pushActive)} />
         </div>
         <div style={styles.notifItem}>
           <div style={styles.notifIconBox}>📧</div>
@@ -139,20 +212,21 @@ function Profil() {
             <h4 style={styles.notifMainText}>Email Summaries</h4>
             <p style={styles.notifSubText}>Weekly critical updates</p>
           </div>
-          <Toggle active={false} />
+          <Toggle active={emailActive} onClick={() => setEmailActive(!emailActive)} />
         </div>
+        
         <h5 style={styles.groupTitle}>Report Status Updates</h5>
         <div style={styles.notifListItem}>
           <span style={styles.listItemText}>New Report Submission</span>
-          <Toggle active={true} />
+          <Toggle active={notifReport} onClick={() => setNotifReport(!notifReport)} />
         </div>
         <div style={styles.notifListItem}>
           <span style={styles.listItemText}>Official Review Started</span>
-          <Toggle active={true} />
+          <Toggle active={notifReview} onClick={() => setNotifReview(!notifReview)} />
         </div>
         <div style={styles.notifListItem}>
           <span style={{ ...styles.listItemText, color: '#E53E3E' }}>✨ Critical Resolution Alerts</span>
-          <Toggle active={true} />
+          <Toggle active={notifCritical} onClick={() => setNotifCritical(!notifCritical)} />
         </div>
       </div>
     </div>
@@ -171,12 +245,36 @@ function Profil() {
         <h4 style={styles.headerTitle}>Profil Akun</h4>
         <div style={{ width: '24px' }}></div>
       </div>
-      <div style={styles.scrollBody}>
+      <div className="hilangkan-scrollbar" style={styles.scrollBody}>
+        
         <div style={styles.mainIdSection}>
-          <div style={styles.avatarLarge}>🧑‍💻</div>
-          <h3 style={styles.userName}>{user.nama}</h3>
+          {/* UBAH FOTO: Ketika div Avatar diklik, dia memicu klik pada input file */}
+          <div 
+            onClick={() => document.getElementById('avatarInput').click()} 
+            style={styles.avatarLarge}
+            title="Klik untuk ubah foto profil"
+          >
+            {editData.avatar ? (
+              <img src={editData.avatar} alt="Profil" style={styles.avatarImg} />
+            ) : (
+              '🧑‍💻'
+            )}
+            <div style={styles.cameraOverlay}>📸</div>
+          </div>
+
+          {/* Input File Tersembunyi */}
+          <input 
+            type="file"
+            id="avatarInput"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleAvatarChange}
+          />
+
+          <h3 style={styles.userName}>{editData.nama}</h3>
           <p style={styles.userNik}>NIK: {maskedNik}</p>
         </div>
+
         <div style={styles.menuGrid}>
           <div onClick={() => setView('pribadi')} style={styles.menuFullItem}>
             <span>👤 Informasi Pribadi</span>
@@ -190,7 +288,16 @@ function Profil() {
             <span>🔔 Pengaturan Notifikasi</span>
             <span>›</span>
           </div>
-          <div onClick={() => { localStorage.removeItem('userData'); navigate('/'); }} style={{ ...styles.menuFullItem, color: '#E53E3E' }}>
+          <div 
+            onClick={() => { 
+              const confirmLogout = window.confirm("Apakah anda keluar dari akun ini?");
+              if (confirmLogout) {
+                localStorage.removeItem('userData'); 
+                navigate('/'); 
+              }
+            }} 
+            style={{ ...styles.menuFullItem, color: '#E53E3E' }}
+          >
             <span>🚪 Keluar Aplikasi</span>
             <span>›</span>
           </div>
@@ -201,7 +308,7 @@ function Profil() {
 }
 
 const styles = {
-  container: { width: '100%', height: '100%', background: '#F8FAFC', display: 'flex', flexDirection: 'column', position: 'relative' },
+  container: { width: '100%', height: '100vh', background: '#F8FAFC', display: 'flex', flexDirection: 'column', position: 'relative' },
   header: { background: '#1A56DB', color: '#fff', padding: '35px 16px 12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   btnBack: { background: 'none', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer' },
   headerTitle: { margin: 0, fontSize: '15px' },
@@ -217,11 +324,11 @@ const styles = {
 
   sectionHeaderRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', marginTop: '10px' },
   sectionTitleBlack: { fontSize: '13px', fontWeight: '800', color: '#1E293B', letterSpacing: '0.5px' },
-  btnUpdate: { fontSize: '10px', color: '#1A56DB', fontWeight: 'bold', cursor: 'pointer' },
+  btnUpdate: { fontSize: '10px', color: '#1A56DB', fontWeight: 'bold', cursor: 'pointer', background: '#EBF4FF', padding: '6px 10px', borderRadius: '8px' },
 
   inputGroup: { marginBottom: '15px' },
   inputLabel: { fontSize: '9px', fontWeight: 'bold', color: '#94A3B8', marginBottom: '6px', display: 'block' },
-  inputBox: { background: '#FFF', border: '1px solid #E2E8F0', padding: '12px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', color: '#1E293B' },
+  inputBox: { width: '100%', boxSizing: 'border-box', background: '#FFF', border: '1px solid #E2E8F0', padding: '12px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', color: '#1E293B', outline: 'none' },
 
   /* Security Protocol */
   securityBanner: { background: '#0B4596', borderRadius: '20px', padding: '24px', color: '#fff', marginBottom: '20px' },
@@ -260,7 +367,14 @@ const styles = {
 
   /* Main Profile */
   mainIdSection: { display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', marginTop: '10px' },
-  avatarLarge: { width: '80px', height: '80px', background: '#1A56DB', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', color: '#FFF' },
+  
+  // Modifikasi avatar agar rapi, overflow hidden menjaga gambar tetap bulat sempurna
+  avatarLarge: { width: '80px', height: '80px', background: '#1A56DB', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', color: '#FFF', position: 'relative', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' },
+  avatarImg: { width: '100%', height: '100%', objectFit: 'cover' },
+  cameraOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0, 0, 0, 0.4)', color: '#FFF', fontSize: '10px', textAlign: 'center', padding: '2px 0', opacity: 0, transition: 'opacity 0.2s' },
+  // memunculkan ikon kamera kecil saat di-hover (opsional desktop style)
+  ':hover > cameraOverlay': { opacity: 1 }, 
+
   userName: { margin: '15px 0 5px 0', fontSize: '20px', fontWeight: '800' },
   userNik: { fontSize: '11px', color: '#94A3B8' },
   menuGrid: { background: '#FFF', borderRadius: '20px', overflow: 'hidden', border: '1px solid #E2E8F0' },

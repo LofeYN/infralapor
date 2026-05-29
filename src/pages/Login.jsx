@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logoLogin from '../assets/logo_login.png';
 
 function Login() {
   const [nik, setNik] = useState('');
@@ -7,7 +8,28 @@ function Login() {
   const handleLogin = (e) => {
     e.preventDefault();
     if (nik && password) {
-      // Paksa langsung lompat ke rute dashboard
+      // 1. Cek database permanen (hasil dari Register)
+      const dbUser = JSON.parse(localStorage.getItem('userDatabase') || '{}');
+
+      // 2. Cocokkan NIK yang diketik dengan NIK di database
+      // Jika cocok, tarik namanya. Jika tidak (login pakai NIK lain), beri nama default.
+      const namaAsli = (dbUser.nik === nik) ? dbUser.nama : 'LOFE';
+      const emailAsli = (dbUser.nik === nik) ? dbUser.email : '-';
+      const avatarAsli = (dbUser.nik === nik) ? dbUser.avatar : null;
+
+      // 3. Buat sesi login aktif baru
+      const sessionData = {
+        nama: namaAsli,
+        nik: nik,
+        email: emailAsli,
+        telepon: '-',
+        avatar: avatarAsli
+      };
+
+      // Simpan sebagai sesi aktif
+      localStorage.setItem('userData', JSON.stringify(sessionData));
+
+      // Lompat ke rute dashboard
       window.location.href = '/dashboard';
     }
   };
@@ -15,7 +37,9 @@ function Login() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <div style={styles.logoContainer}>🏗️</div>
+        <div style={styles.logoContainer}>
+          <img src={logoLogin} alt="Logo Infralapor" style={styles.logoImg} />
+        </div>
         <h2 style={styles.brandTitle}>InfraLapor</h2>
         <p style={styles.brandSubtitle}>Secure Application Access</p>
       </div>
@@ -27,11 +51,16 @@ function Login() {
           <div style={styles.inputGroup}>
             <label style={styles.label}>NOMOR INDUK KEPENDUDUKAN (NIK)</label>
             <input 
-              type="text" 
+              type="number" // 1. DIUBAH MENJADI NUMBER
               placeholder="Masukkan 16 digit NIK Anda" 
-              maxLength={16}
               value={nik}
-              onChange={(e) => setNik(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                // 2. BATASI MAKSIMAL 16 DIGIT (karena type number abaikan maxLength)
+                if (value.length <= 16) {
+                  setNik(value);
+                }
+              }}
               style={styles.input}
               required
             />
@@ -85,21 +114,27 @@ const styles = {
     gap: '6px',
   },
   logoContainer: {
-    width: '55px',
-    height: '55px',
+    width: '100px',
+    height: '100px',
     background: '#ffffff',
-    borderRadius: '16px',
+    borderRadius: '24px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '28px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
+    overflow: 'hidden', 
+    padding: '8px'
+  },
+  logoImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain' 
   },
   brandTitle: {
     color: '#ffffff',
     fontSize: '22px',
     fontWeight: 'bold',
-    margin: '4px 0 0 0',
+    margin: '8px 0 0 0',
   },
   brandSubtitle: {
     color: 'rgba(255,255,255,0.5)',
@@ -145,6 +180,7 @@ const styles = {
   },
   input: {
     width: '100%',
+    boxSizing: 'border-box',
     padding: '12px 14px',
     background: '#F7FAFC',
     border: '1px solid #E2E8F0',

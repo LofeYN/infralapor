@@ -44,66 +44,81 @@ function DaftarLaporan() {
     );
   }, []);
 
-  // ── LOAD DATA LAPORAN (tanpa duplikat) ──────────────────────────────────────
+  // ── LOAD DATA LAPORAN (SINKRON DENGAN DASHBOARD) ───────────────────────────
   useEffect(() => {
-    const dataAwal = [
-      {
-        id: '#LPR-882',
-        jenis: 'Lubang Jalan Utama',
-        status: 'CRITICAL',
-        tingkat: '87%',
-        imgUrl: 'https://images.unsplash.com/photo-1515162305285-0293e4767cc2?auto=format&fit=crop&w=300&q=80',
-      },
-      {
-        id: '#LPR-883',
-        jenis: 'Paving Blok Hancur',
-        status: 'CRITICAL',
-        tingkat: '85%',
-        imgUrl: 'https://images.unsplash.com/photo-1621243804936-775306a8f2e3?auto=format&fit=crop&w=300&q=80',
-      },
-    ];
-
-    const awalIds = dataAwal.map((d) => d.id);
-
-    let laporanLokal = [];
-    try {
+    const ambilLaporan = () => {
       const raw = localStorage.getItem('inframerge_reports');
       if (raw) {
         const parsed = JSON.parse(raw);
-        laporanLokal = parsed
-          .filter((item) => {
-            const itemId = item.id.startsWith('#') ? item.id : `#${item.id}`;
-            return !awalIds.includes(itemId); // buang duplikat
-          })
-          .map((item) => ({
-            id: item.id.startsWith('#') ? item.id : `#${item.id}`,
-            jenis: item.jenis || 'Lubang Jalan Utama',
-            status: 'CRITICAL',
-            tingkat: item.tingkat
-              ? item.tingkat.replace('BERAT ', '').replace(' Damage', '')
-              : '87%',
-            imgUrl:
-              'https://images.unsplash.com/photo-1515162305285-0293e4767cc2?auto=format&fit=crop&w=300&q=80',
-          }));
+        if (parsed.length > 0) {
+          setListLaporan(parsed);
+          return;
+        }
       }
-    } catch {}
+      
+      // Jika kosong, gunakan data default yang SAMA PERSIS dengan Dashboard
+      const defaultLaporan = [
+        {
+          id: '#LPR-882',
+          lokasi: 'Jl. Merdeka KM 12, Samping Halte Bus',
+          jenis: 'Lubang Jalan Utama',
+          status: 'CRITICAL',
+          tingkat: '87%',
+          imgUrl: 'https://images.unsplash.com/photo-1515162305285-0293e4767cc2?auto=format&fit=crop&w=300&q=80'
+        },
+        {
+          id: '#LPR-741',
+          lokasi: 'Jl. Raya Banjarsari Wetan, Madiun',
+          jenis: 'Retakan Aspal Parah',
+          status: 'HEAVY',
+          tingkat: '64%',
+          imgUrl: 'https://images.unsplash.com/photo-1599740831464-597f87df3324?auto=format&fit=crop&w=300&q=80'
+        },
+        {
+          id: '#LPR-102',
+          lokasi: 'Area Pemukiman RT 04, Ds. Banjarsari Wetan',
+          jenis: 'Pothole Air Dangkal',
+          status: 'SELESAI',
+          tingkat: '42%',
+          imgUrl: 'https://images.unsplash.com/photo-1530685934402-d5b927188a64?auto=format&fit=crop&w=300&q=80'
+        }
+      ];
+      
+      setListLaporan(defaultLaporan);
+      localStorage.setItem('inframerge_reports', JSON.stringify(defaultLaporan));
+    };
 
-    setListLaporan([...laporanLokal, ...dataAwal]);
+    ambilLaporan();
+    window.addEventListener('focus', ambilLaporan);
+    return () => window.removeEventListener('focus', ambilLaporan);
   }, []);
 
-  // ── HAPUS LAPORAN ────────────────────────────────────────────────────────────
+  // ── HAPUS LAPORAN & UPDATE LOCALSTORAGE ──────────────────────────────────────
   const handleHapus = (id) => {
-    setListLaporan((prev) => prev.filter((lap) => lap.id !== id));
-    try {
-      const raw = localStorage.getItem('inframerge_reports');
-      if (raw) {
-        const filtered = JSON.parse(raw).filter((item) => {
-          const itemId = item.id.startsWith('#') ? item.id : `#${item.id}`;
-          return itemId !== id;
-        });
-        localStorage.setItem('inframerge_reports', JSON.stringify(filtered));
-      }
-    } catch {}
+    const konfirmasi = window.confirm('Apakah Anda yakin ingin menghapus laporan ini?');
+    if (!konfirmasi) return;
+
+    setListLaporan((prev) => {
+      const dataSisa = prev.filter((lap) => lap.id !== id);
+      // Simpan langsung ke localStorage agar jika user kembali ke Dashboard, data terhapus
+      localStorage.setItem('inframerge_reports', JSON.stringify(dataSisa));
+      return dataSisa;
+    });
+  };
+
+  // ── DINAMIS BADGE STYLE (DIAMBIL DARI LOGIKA DASHBOARD) ──────────────────────
+  const getBadgeStyle = (status) => {
+    switch (status) {
+      case 'CRITICAL':
+        return { bg: '#FED7D7', txt: '#E53E3E' };
+      case 'HEAVY':
+      case 'MODERATE':
+        return { bg: '#FEEBC8', txt: '#DD6B20' };
+      case 'SELESAI':
+        return { bg: '#C6F6D5', txt: '#38A169' };
+      default:
+        return { bg: '#E2E8F0', txt: '#475569' };
+    }
   };
 
   // ── WARNA GPS INFO BAR ───────────────────────────────────────────────────────
@@ -126,8 +141,8 @@ function DaftarLaporan() {
         <div style={{ width: 32 }} />
       </div>
 
-      {/* LIST LAPORAN */}
-      <div style={styles.scrollBody}>
+      {/* LIST LAPORAN - DITAMBAHKAN CLASS 'hilangkan-scrollbar' */}
+      <div className="hilangkan-scrollbar" style={styles.scrollBody}>
 
         {/* GPS INFO BAR */}
         <div style={{ ...styles.gpsBar, ...gpsBarStyle }}>
@@ -137,30 +152,36 @@ function DaftarLaporan() {
         {listLaporan.length === 0 ? (
           <div style={styles.emptyState}>Belum ada laporan.</div>
         ) : (
-          listLaporan.map((lap, idx) => (
-            <div key={`${lap.id}-${idx}`} style={styles.card}>
-              <div style={styles.cardImageFrame}>
-                <img src={lap.imgUrl} alt="Kerusakan" style={styles.cardImg} />
-                <span style={styles.badge}>{lap.status}</span>
-              </div>
-              <div style={styles.cardDetail}>
-                <div style={styles.cardMetaRow}>
-                  <h4 style={styles.cardTitle}>{lap.jenis}</h4>
-                  <span style={styles.cardId}>{lap.id}</span>
+          listLaporan.map((lap, idx) => {
+            const badgeTheme = getBadgeStyle(lap.status);
+
+            return (
+              <div key={`${lap.id}-${idx}`} style={styles.card}>
+                <div style={styles.cardImageFrame}>
+                  <img src={lap.imgUrl} alt="Kerusakan" style={styles.cardImg} />
+                  <span style={{ ...styles.badge, background: badgeTheme.bg, color: badgeTheme.txt }}>
+                    {lap.status}
+                  </span>
                 </div>
-                <div style={styles.progressRow}>
-                  <div style={styles.progressBg}>
-                    <div style={{ ...styles.progressFill, width: lap.tingkat }} />
+                <div style={styles.cardDetail}>
+                  <div style={styles.cardMetaRow}>
+                    <h4 style={styles.cardTitle}>{lap.jenis}</h4>
+                    <span style={styles.cardId}>{lap.id}</span>
                   </div>
-                  <span style={styles.progressText}>AI: {lap.tingkat}</span>
-                </div>
-                <div style={styles.bottomRow}>
-                  <p style={styles.lokasiText}>📍 {lokasiAsli}</p>
-                  <button onClick={() => handleHapus(lap.id)} style={styles.hapusBtn}>🗑️</button>
+                  <div style={styles.progressRow}>
+                    <div style={styles.progressBg}>
+                      <div style={{ ...styles.progressFill, width: lap.tingkat, backgroundColor: badgeTheme.txt }} />
+                    </div>
+                    <span style={{ ...styles.progressText, color: badgeTheme.txt }}>AI: {lap.tingkat}</span>
+                  </div>
+                  <div style={styles.bottomRow}>
+                    <p style={styles.lokasiText}>📍 {lap.lokasi || lokasiAsli}</p>
+                    <button onClick={() => handleHapus(lap.id)} style={styles.hapusBtn}>🗑️</button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -197,17 +218,17 @@ const styles = {
   gpsBar: { borderRadius: '8px', padding: '8px 12px', fontSize: '10px', fontWeight: '600', flexShrink: 0 },
   emptyState: { textAlign: 'center', padding: '40px', color: '#94A3B8', fontSize: '13px' },
   card: { background: '#FFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', display: 'flex', height: '110px', flexShrink: 0 },
-  cardImageFrame: { width: '100px', flexShrink: 0, position: 'relative' },
+  cardImageFrame: { width: '100px', flexShrink: 0, position: 'relative', background: '#EDF2F7' },
   cardImg: { width: '100%', height: '100%', objectFit: 'cover' },
-  badge: { position: 'absolute', top: '6px', left: '6px', fontSize: '7px', fontWeight: '900', padding: '2px 6px', borderRadius: '4px', background: '#FED7D7', color: '#E53E3E' },
+  badge: { position: 'absolute', top: '6px', left: '6px', fontSize: '7px', fontWeight: '900', padding: '2px 6px', borderRadius: '4px' },
   cardDetail: { flex: 1, padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 },
   cardMetaRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' },
   cardTitle: { fontSize: '12px', fontWeight: '800', color: '#1E293B', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' },
   cardId: { fontSize: '9px', fontWeight: 'bold', color: '#94A3B8', fontFamily: 'monospace', flexShrink: 0 },
   progressRow: { display: 'flex', alignItems: 'center', gap: '8px' },
   progressBg: { flex: 1, height: '4px', background: '#E2E8F0', borderRadius: '2px' },
-  progressFill: { height: '100%', borderRadius: '2px', background: '#E53E3E' },
-  progressText: { fontSize: '8px', fontWeight: '800', color: '#E53E3E', flexShrink: 0 },
+  progressFill: { height: '100%', borderRadius: '2px', transition: 'width 0.5s ease-in-out' },
+  progressText: { fontSize: '8px', fontWeight: '800', flexShrink: 0, fontFamily: 'monospace' },
   bottomRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' },
   lokasiText: { fontSize: '10px', color: '#475569', margin: 0, fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 },
   hapusBtn: { background: '#FFF5F5', border: '1px solid #FED7D7', fontSize: '14px', cursor: 'pointer', padding: '4px 6px', borderRadius: '6px', flexShrink: 0 },
