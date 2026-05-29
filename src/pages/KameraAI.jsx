@@ -263,7 +263,8 @@ function KameraAI() {
             </div>
           </div>
 
-          <div style={{ padding: '0 12px 16px 12px' }}>
+          {/* PERBAIKAN PADDING BAWAH: Diperbesar jadi 30px agar tombol naik & aman */}
+          <div style={{ padding: '0 12px 30px 12px' }}>
             <button 
               onClick={handleKirimLaporanKeLedger} 
               style={{
@@ -283,15 +284,14 @@ function KameraAI() {
 }
 
 const styles = {
-  /* PERUBAHAN 1: Menggunakan 100dvh agar responsif terhadap navigation bar HP modern */
-  container: { width: '100%', height: '100dvh', minHeight: '100vh', background: '#000', position: 'relative', fontFamily: 'monospace' },
-  cameraScreen: { height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '12px', position: 'relative' },
+  /* PERBAIKAN CONTAINER: Ditambahkan display flex agar anak-anaknya patuh ukuran layar */
+  container: { width: '100%', height: '100dvh', background: '#000', position: 'relative', fontFamily: 'monospace', display: 'flex', flexDirection: 'column' },
+  cameraScreen: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '12px', position: 'relative' },
   videoStream: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 },
   roadTextureBg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: '#4A5568', backgroundImage: `radial-gradient(#2D3748 20%, transparent 20%)`, backgroundSize: '6px 6px', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   potholeReal: { position: 'absolute', width: '150px', height: '100px', background: '#1A202C', borderRadius: '40% 50% 30% 55%', border: '2px solid #2D3748', overflow: 'hidden' },
   waterReflection: { position: 'absolute', bottom: '15px', left: '20%', width: '60%', height: '30%', background: 'rgba(0, 242, 254, 0.15)', borderRadius: '50%' },
   
-  /* PERUBAHAN 2: Menambahkan jarak aman (paddingTop) agar tidak menabrak notch HP */
   topHudContainer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10, paddingTop: '35px' },
   
   btnBack: { background: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff', fontSize: '12px', width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer' },
@@ -308,17 +308,20 @@ const styles = {
   indTitle: { fontSize: '5px', color: '#A0AEC0', fontWeight: 'bold' },
   indStatus: { fontSize: '7.5px', color: '#FFF', marginTop: '1px' },
   
-  /* PERUBAHAN 3: Menambahkan paddingBottom yang besar agar tombol aman dari navigation bar */
   shutterRow: { zIndex: 10, width: '100%', paddingBottom: '45px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' },
   
   shutterContainer: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', position: 'relative' },
   hintText: { color: '#FFF', fontSize: '8px', textShadow: '1px 1px 2px #000', margin: 0 },
-  whiteShutterBtn: { width: '56px', height: '56px', background: '#FFF', border: '4px solid #CBD5E0', borderRadius: '50%', cursor: 'pointer', zIndex: 2 }, /* Sedikit diperbesar agar pas ditekan */
+  whiteShutterBtn: { width: '56px', height: '56px', background: '#FFF', border: '4px solid #CBD5E0', borderRadius: '50%', cursor: 'pointer', zIndex: 2 }, 
   galleryBtn: { position: 'absolute', right: '30px', background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '50%', width: '40px', height: '40px', fontSize: '18px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', zIndex: 2, backdropFilter: 'blur(4px)' },
   
-  previewScreen: { height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F7FAFC' },
+  /* PERBAIKAN LAYOUT PREVIEW: Kunci dengan flex 1 dan overflow hidden */
+  previewScreen: { flex: 1, display: 'flex', flexDirection: 'column', background: '#F7FAFC', overflow: 'hidden' },
   previewHeader: { background: '#0A1628', color: '#fff', padding: '35px 12px 12px 12px', textAlign: 'center', fontSize: '11px' },
-  previewImageArea: { flex: 1, margin: '12px', borderRadius: '12px', position: 'relative', overflow: 'hidden' },
+  
+  /* PERBAIKAN GAMBAR: minHeight: 0 akan memaksa gambar mengecil jika ruang untuk tombol diperlukan */
+  previewImageArea: { flex: 1, margin: '12px', borderRadius: '12px', position: 'relative', overflow: 'hidden', minHeight: 0 },
+  
   capturedImageStyle: { width: '100%', height: '100%', objectFit: 'cover' },
   maskSegformerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(229, 62, 62, 0.45)', border: '1px solid #E53E3E' },
   maskWebcamOverlay: { position: 'absolute', top: '30%', left: '20%', width: '60%', height: '40%', background: 'rgba(225, 62, 62, 0.2)', border: '2px dashed #E53E3E', borderRadius: '24px' },
@@ -326,7 +329,9 @@ const styles = {
   reportCard: { background: '#fff', margin: '0 12px 12px 12px', padding: '12px', borderRadius: '10px' },
   barBg: { width: '100%', height: '6px', background: '#E2E8F0', borderRadius: '3px', overflow: 'hidden', marginTop: '6px' },
   barFill: { height: '100%', transition: 'width 0.4s ease-out' },
-  btnKirim: { width: '100%', padding: '14px', background: '#0A1628', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', marginBottom: '20px' } /* Ditambahkan marginBottom */
+  
+  /* PERBAIKAN TOMBOL: Dihapus marginBottom agar digantikan oleh paddingBottom di div pembungkus */
+  btnKirim: { width: '100%', padding: '14px', background: '#0A1628', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' } 
 };
 
 export default KameraAI;
