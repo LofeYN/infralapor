@@ -8,20 +8,15 @@
 body {
   width: 100vw;
   height: 100vh;
-  background-color: #2D3748; 
-  display: flex;
-  justify-content: center; 
-  align-items: center;     
+  background-color: #0A1628; /* Diubah ke warna Navy agar menyatu dengan aplikasi */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow: hidden;        
 }
 
 #root {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 100%;
+  height: 100%;
 }
-
 
 .hilangkan-scrollbar::-webkit-scrollbar {
   display: none;
