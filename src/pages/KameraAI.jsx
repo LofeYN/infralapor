@@ -5,22 +5,21 @@ function KameraAI() {
   const [showPreview, setShowPreview] = useState(false);
   const [useSimulatedMock, setUseSimulatedMock] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
-  const [severityScore, setSeverityScore] = useState(0); // Skor dinamis riil
-  const [isSending, setIsSending] = useState(false); // State loading untuk memproses GPS & API
+  const [severityScore, setSeverityScore] = useState(0); 
+  const [isSending, setIsSending] = useState(false); 
   
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const canvasRef = useRef(null);
   const navigate = useNavigate();
 
-  // Efek untuk menginisialisasi kamera
   useEffect(() => {
     if (!showPreview) {
       navigator.mediaDevices.getUserMedia({ 
         video: { 
           width: { ideal: 640 }, 
           height: { ideal: 640 }, 
-          facingMode: { ideal: 'environment' } // Dioptimalkan untuk kamera belakang smartphone
+          facingMode: { ideal: 'environment' } 
         } 
       })
       .then((stream) => {
@@ -42,7 +41,6 @@ function KameraAI() {
     };
   }, [showPreview]);
 
-  // Fungsi Pemrosesan Citra Digital untuk Menghitung Keparahan Lubang
   const hitungSeverityRiil = (canvas) => {
     const context = canvas.getContext('2d');
     const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -51,38 +49,31 @@ function KameraAI() {
     let pixelGelap = 0;
     let totalSampel = data.length / 4;
 
-    // Analisis variasi luminans piksel (Heuristik Kontras Kerusakan Jalan)
-    for (let i = 0; i < data.length; i += 16) { // Loncat per 4 piksel untuk optimasi performa
+    for (let i = 0; i < data.length; i += 16) { 
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
       
-      // Hitung tingkat kegelapan/kecerahan (Grayscale formula)
       const kecerahan = 0.299 * r + 0.587 * g + 0.114 * b;
       
-      // Jalan berlubang cenderung memiliki bayangan/gradien lebih gelap dari aspal normal
       if (kecerahan < 90) {
         pixelGelap++;
       }
     }
 
-    // Hitung rasio area kerusakan
     const rasioKerusakan = (pixelGelap / (totalSampel / 4)) * 100;
-    
-    // Normalisasi skor agar tetap berada di rentang kritis yang realistis (40% - 95%)
     let skorFinal = Math.min(Math.max(rasioKerusakan + 35, 42.5), 94.8);
     return parseFloat(skorFinal.toFixed(1));
   };
 
   const handleCaptureAI = () => {
-    let skorHasilAnalisis = 65.4; // Nilai default jika menggunakan mock
+    let skorHasilAnalisis = 65.4; 
 
     if (!useSimulatedMock && videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
       
-      // Sesuaikan resolusi canvas dengan feed video riil
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -90,10 +81,8 @@ function KameraAI() {
       const dataUrl = canvas.toDataURL('image/png');
       setCapturedImage(dataUrl);
 
-      // Jalankan kalkulasi citra berbasis piksel
       skorHasilAnalisis = hitungSeverityRiil(canvas);
     } else {
-      // Jika masuk mode simulasi/mock, berikan angka fluktuatif acak yang realistis
       skorHasilAnalisis = parseFloat((55 + Math.random() * 35).toFixed(1));
     }
 
@@ -101,14 +90,12 @@ function KameraAI() {
     setShowPreview(true);
   };
 
-  // FUNGSI BARU: Mengambil gambar dari galeri perangkat
   const handleGalleryUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setCapturedImage(reader.result);
-        // Karena ini dari galeri dan bukan live feed, kita pakai skor AI simulasi/acak
         const skorHasilAnalisis = parseFloat((55 + Math.random() * 35).toFixed(1));
         setSeverityScore(skorHasilAnalisis);
         setShowPreview(true);
@@ -124,18 +111,17 @@ function KameraAI() {
   };
 
   const handleKirimLaporanKeLedger = () => {
-    if (isSending) return; // Mencegah double submit sewaktu memproses lokasi
+    if (isSending) return; 
     setIsSending(true);
 
     const idAcak = `LPR-${Math.floor(100 + Math.random() * 900)}-AI`;
     const kategori = getStatusKategori(severityScore);
 
-    // Fungsi pembantu untuk menyimpan objek akhir ke localStorage
     const eksekusiSimpanLaporan = (alamatTekstual, koordinatGps = null) => {
       const laporanBaru = {
         id: `#${idAcak}`,
         lokasi: alamatTekstual,
-        koordinat: koordinatGps, // Menyimpan koordinat lintang & bujur riil untuk modul peta
+        koordinat: koordinatGps, 
         jenis: 'Lubang Jalan / Pothole',
         status: kategori.teks,
         tingkat: `${severityScore}%`,
@@ -152,7 +138,6 @@ function KameraAI() {
       navigate('/dashboard'); 
     };
 
-    // Mengambil titik koordinat asli dari hardware GPS Perangkat
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -160,9 +145,8 @@ function KameraAI() {
           const lng = position.coords.longitude;
           const objekKoordinat = { latitude: lat, longitude: lng };
 
-          // Reverse Geocoding ke OpenStreetMap Nominatim untuk menerjemahkan koordinat menjadi alamat jalan asli
           fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
-            headers: { 'Accept-Language': 'id' } // Meminta output nama daerah berbahasa Indonesia
+            headers: { 'Accept-Language': 'id' } 
           })
             .then(res => res.json())
             .then(data => {
@@ -178,7 +162,7 @@ function KameraAI() {
           console.warn("Akses GPS ditolak pengguna atau error perangkat:", error.message);
           eksekusiSimpanLaporan('Jl. Raya Banjarsari Wetan, Madiun (GPS Akses Ditolak)', null);
         },
-        { enableHighAccuracy: true, timeout: 7000 } // Meminta akurasi tinggi (Hardware GPS satelit)
+        { enableHighAccuracy: true, timeout: 7000 } 
       );
     } else {
       console.warn("Browser tidak mendukung geolokasi.");
@@ -231,7 +215,6 @@ function KameraAI() {
             </div>
           </div>
 
-          {/* BAGIAN TOMBOL SHUTTER & GALERI */}
           <div style={styles.shutterRow}>
             <p style={styles.hintText}>Ketuk tombol putih untuk memindai kerusakan jalan</p>
             <div style={styles.shutterContainer}>
@@ -240,7 +223,6 @@ function KameraAI() {
               <button onClick={() => document.getElementById('galeriInputLaporan').click()} style={styles.galleryBtn} title="Pilih dari Galeri">
                 🖼️
               </button>
-              {/* Input File Tersembunyi */}
               <input 
                 type="file" 
                 id="galeriInputLaporan" 
@@ -301,13 +283,17 @@ function KameraAI() {
 }
 
 const styles = {
-  container: { width: '100%', height: '100vh', background: '#000', position: 'relative', fontFamily: 'monospace' },
+  /* PERUBAHAN 1: Menggunakan 100dvh agar responsif terhadap navigation bar HP modern */
+  container: { width: '100%', height: '100dvh', minHeight: '100vh', background: '#000', position: 'relative', fontFamily: 'monospace' },
   cameraScreen: { height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '12px', position: 'relative' },
   videoStream: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 },
   roadTextureBg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: '#4A5568', backgroundImage: `radial-gradient(#2D3748 20%, transparent 20%)`, backgroundSize: '6px 6px', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   potholeReal: { position: 'absolute', width: '150px', height: '100px', background: '#1A202C', borderRadius: '40% 50% 30% 55%', border: '2px solid #2D3748', overflow: 'hidden' },
   waterReflection: { position: 'absolute', bottom: '15px', left: '20%', width: '60%', height: '30%', background: 'rgba(0, 242, 254, 0.15)', borderRadius: '50%' },
-  topHudContainer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10, paddingTop: '20px' },
+  
+  /* PERUBAHAN 2: Menambahkan jarak aman (paddingTop) agar tidak menabrak notch HP */
+  topHudContainer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10, paddingTop: '35px' },
+  
   btnBack: { background: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff', fontSize: '12px', width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer' },
   hudCenterText: { textAlign: 'center', display: 'flex', flexDirection: 'column' },
   pulseDot: { width: '8px', height: '8px', background: '#48BB78', borderRadius: '50%', boxShadow: '0 0 6px #48BB78' },
@@ -322,14 +308,15 @@ const styles = {
   indTitle: { fontSize: '5px', color: '#A0AEC0', fontWeight: 'bold' },
   indStatus: { fontSize: '7.5px', color: '#FFF', marginTop: '1px' },
   
-  // Style baru untuk mensejajarkan tombol shutter dan galeri
-  shutterRow: { zIndex: 10, width: '100%', paddingBottom: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' },
+  /* PERUBAHAN 3: Menambahkan paddingBottom yang besar agar tombol aman dari navigation bar */
+  shutterRow: { zIndex: 10, width: '100%', paddingBottom: '45px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' },
+  
   shutterContainer: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', position: 'relative' },
   hintText: { color: '#FFF', fontSize: '8px', textShadow: '1px 1px 2px #000', margin: 0 },
-  whiteShutterBtn: { width: '48px', height: '48px', background: '#FFF', border: '4px solid #CBD5E0', borderRadius: '50%', cursor: 'pointer', zIndex: 2 },
-  galleryBtn: { position: 'absolute', right: '30px', background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '50%', width: '36px', height: '36px', fontSize: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', zIndex: 2, backdropFilter: 'blur(4px)' },
+  whiteShutterBtn: { width: '56px', height: '56px', background: '#FFF', border: '4px solid #CBD5E0', borderRadius: '50%', cursor: 'pointer', zIndex: 2 }, /* Sedikit diperbesar agar pas ditekan */
+  galleryBtn: { position: 'absolute', right: '30px', background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '50%', width: '40px', height: '40px', fontSize: '18px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', zIndex: 2, backdropFilter: 'blur(4px)' },
   
-  previewScreen: { height: '100vh', display: 'flex', flexDirection: 'column', background: '#F7FAFC' },
+  previewScreen: { height: '100dvh', minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F7FAFC' },
   previewHeader: { background: '#0A1628', color: '#fff', padding: '35px 12px 12px 12px', textAlign: 'center', fontSize: '11px' },
   previewImageArea: { flex: 1, margin: '12px', borderRadius: '12px', position: 'relative', overflow: 'hidden' },
   capturedImageStyle: { width: '100%', height: '100%', objectFit: 'cover' },
@@ -339,7 +326,7 @@ const styles = {
   reportCard: { background: '#fff', margin: '0 12px 12px 12px', padding: '12px', borderRadius: '10px' },
   barBg: { width: '100%', height: '6px', background: '#E2E8F0', borderRadius: '3px', overflow: 'hidden', marginTop: '6px' },
   barFill: { height: '100%', transition: 'width 0.4s ease-out' },
-  btnKirim: { width: '100%', padding: '10px', background: '#0A1628', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer' }
+  btnKirim: { width: '100%', padding: '14px', background: '#0A1628', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', marginBottom: '20px' } /* Ditambahkan marginBottom */
 };
 
 export default KameraAI;

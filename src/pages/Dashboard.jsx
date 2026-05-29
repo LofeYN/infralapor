@@ -61,7 +61,6 @@ function Dashboard() {
     return () => window.removeEventListener('focus', ambilLaporan);
   }, []);
 
-  // KALKULASI STATISTIK SECARA OTOMATIS DAN RIIL
   const totalLaporan = laporanList.length;
   const jumlahDiproses = laporanList.filter(item => item.status === 'CRITICAL' || item.status === 'HEAVY' || item.status === 'MODERATE').length;
   const jumlahSelesai = laporanList.filter(item => item.status === 'SELESAI').length;
@@ -91,7 +90,6 @@ function Dashboard() {
       {/* APP BAR */}
       <div style={styles.appBar}>
         <div style={styles.appBarLeft}>
-          {/* LOGO DENGAN PERBAIKAN UKURAN & MARGIN NEGATIF */}
           <img src={logoImg} alt="Infralapor Logo" style={styles.logoImage} />
           <span style={styles.appBrandText}>Infralapor</span>
         </div>
@@ -198,20 +196,20 @@ function Dashboard() {
 
 const styles = {
   container: { width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', background: '#F8FAFC', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', position: 'relative', overflow: 'hidden' },
-  appBar: { background: '#0B4596', padding: '40px 16px 14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 },
-  appBarLeft: { display: 'flex', alignItems: 'center', gap: '0px' }, // Diubah ke 0px agar teks tidak berjarak jauh akibat ruang transparan gambar
   
-  // Modifikasi khusus untuk mengatasi padding bawaan logo gambar yang terlalu lebar
+  // PERBAIKAN 1: Padding atas diubah dari 40px ke 16px agar tidak kebesaran
+  appBar: { background: '#0B4596', padding: '16px 16px 14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 },
+  
+  appBarLeft: { display: 'flex', alignItems: 'center', gap: '0px' },
   logoImage: { 
     width: '110px', 
     height: '55px', 
     objectFit: 'contain', 
-    marginLeft: '-40px',   // Memotong ruang kosong transparan sebelah kiri
-    marginRight: '-40px',  // Memotong ruang kosong transparan sebelah kanan
+    marginLeft: '-40px', 
+    marginRight: '-40px',
     marginTop: '-5px',
     marginBottom: '-5px'
   },
-  
   appBrandText: { color: '#FFFFFF', fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px' },
   profileAvatar: { width: '34px', height: '34px', borderRadius: '50%', background: '#FFFFFF', color: '#0B4596', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', border: '2px solid rgba(255,255,255,0.3)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', overflow: 'hidden' },
   scrollBody: { flex: 1, padding: '24px 16px 90px 16px', display: 'flex', flexDirection: 'column', overflowY: 'auto', WebkitOverflowScrolling: 'touch', minHeight: 0 },
@@ -244,7 +242,10 @@ const styles = {
   bottomRow: { display: 'flex', alignItems: 'center', marginTop: '2px' },
   lokasiText: { fontSize: '10.5px', color: '#64748B', margin: 0, fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 },
   emptyState: { textAlign: 'center', padding: '30px 20px', color: '#94A3B8', fontSize: '12px', fontWeight: '600', background: '#FFF', borderRadius: '14px', border: '1px dashed #CBD5E1' },
-  bottomTabBar: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '65px', background: '#FFFFFF', borderTop: '1px solid #EDF2F7', display: 'flex', justifyContent: 'space-around', alignItems: 'center', paddingBottom: '12px', zIndex: 1000 },
+  
+  // PERBAIKAN 2: position diubah dari 'absolute' ke 'fixed', ditambahkan width '100%'
+  bottomTabBar: { position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', height: '65px', background: '#FFFFFF', borderTop: '1px solid #EDF2F7', display: 'flex', justifyContent: 'space-around', alignItems: 'center', paddingBottom: '12px', zIndex: 1000 },
+  
   tabItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#94A3B8', cursor: 'pointer', flex: 1 },
   tabIcon: { fontSize: '19px', opacity: 0.8 },
   tabLabel: { fontSize: '8px', fontWeight: '800', letterSpacing: '0.3px' },
